@@ -29,21 +29,21 @@ class Title(models.Model):
     name = models.CharField(max_length=256)
     year = models.PositiveIntegerField()
     description = models.TextField()
-    category = models.ManyToManyField(
+    category = models.ForeignKey(
         Category, on_delete=models.CASCADE,
-        through='CategoriesOfTitle')
-    genre = models.ForeignKey(
-        Genre, on_delete=models.CASCADE,
         blank=True, null=True)
+    genre = models.ManyToManyField(
+        Genre, on_delete=models.CASCADE,
+        through='GenresOfTitle')
     # rating = 
 
     def __str__(self):
         return self.name
 
 
-class CategoriesOfTitle(models.Model):
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+class GenresOfTitle(models.Model):
+    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
     title = models.ForeignKey(Title, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'{self.title} категория:{self.category}'
+        return f'{self.title} категория:{self.genre}'
