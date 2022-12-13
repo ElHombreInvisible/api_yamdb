@@ -30,10 +30,12 @@ class Title(models.Model):
     year = models.PositiveIntegerField()
     description = models.TextField()
     category = models.ForeignKey(
-        Category, on_delete=models.CASCADE,
+        Category, on_delete=models.PROTECT,
+        related_name='titles',
         blank=True, null=True)
     genre = models.ManyToManyField(
-        Genre, on_delete=models.CASCADE,
+        Genre, on_delete=models.PROTECT,
+        related_name='titles',
         through='GenresOfTitle')
     # rating = 
 
@@ -42,7 +44,7 @@ class Title(models.Model):
 
 
 class GenresOfTitle(models.Model):
-    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
+    genre = models.ForeignKey(Genre, on_delete=models.CASCADE) # или Protect?
     title = models.ForeignKey(Title, on_delete=models.CASCADE)
 
     def __str__(self):
