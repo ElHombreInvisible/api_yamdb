@@ -1,12 +1,11 @@
 from django.shortcuts import get_object_or_404
-from reviews.models import Category, Genre, Title, Review
 from rest_framework import filters, mixins, permissions, viewsets
 from rest_framework.pagination import PageNumberPagination
-from .serializers import CategorySerializer, GenreSerializer
-from .serializers import TitleSerializer
-from .serializers import ReviewSerializer, CommentSerializer
-from .permissions import AuthorOrReadOnly
+from reviews.models import Category, Genre, Review, Title
 
+from .permissions import AuthorOrReadOnly
+from .serializers import (CategorySerializer, CommentSerializer,
+                          GenreSerializer, ReviewSerializer, TitleSerializer)
 
 
 class CategoryViewSet(mixins.CreateModelMixin,
