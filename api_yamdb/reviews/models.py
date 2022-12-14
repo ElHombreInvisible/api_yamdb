@@ -35,7 +35,7 @@ class Title(models.Model):
         related_name='titles',
         blank=True, null=True)
     genre = models.ManyToManyField(
-        Genre, on_delete=models.PROTECT,
+        Genre, # on_delete=models.PROTECT,
         related_name='titles',
         through='GenresOfTitle')
     # rating = 
