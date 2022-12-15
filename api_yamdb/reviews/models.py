@@ -1,16 +1,15 @@
+from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-
-class User(models.Model):
-    pass
+# User = get_user_model()
+from users.models import User
 
 
 class Genre(models.Model):
     name = models.CharField(max_length=256)
     slug = models.SlugField(max_length=50,
                             unique=True)
-    # description = models.TextField()
 
     def __str__(self):
         return self.name
@@ -20,7 +19,6 @@ class Category(models.Model):
     name = models.CharField(max_length=256)
     slug = models.SlugField(max_length=50,
                             unique=True)
-    # description = models.TextField()
 
     def __str__(self):
         return self.name
