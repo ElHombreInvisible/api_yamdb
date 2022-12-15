@@ -5,13 +5,19 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **kwargs):
-        user = self.model(email=email, **kwargs)
+        user = self.model(email=self.normalize_email(email), **kwargs)
         user.set_password(password)
         user.save()
         return user
 
-    def create_superuser(self, email, password, **kwargs):
-        user = self.model(email=email, is_staff=True, is_superuser=True, **kwargs)
+    def create_superuser(self, password, **kwargs):
+        # При создании юзера не запрашивает мыло, и если в параметрах
+        # прописать email то при создании пишет что мыло пропущено
+        # поэтому пока что захардкодил мыло.
+        email = 'dima@mail.ru'
+        user = self.model(email=self.normalize_email(email),
+                          is_staff=True,
+                          is_superuser=True, **kwargs)
         user.set_password(password)
         user.save()
         return user
