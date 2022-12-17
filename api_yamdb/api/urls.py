@@ -14,5 +14,4 @@ urlpatterns = [
          get_jwt_token,
          name='get_jwt_token'),
     path('v1/', include(router.urls)),
-]
-
+    ]

@@ -13,6 +13,8 @@ class SendConfirmationCodeSerializer(serializers.ModelSerializer):
         fields = ('email', 'username')
 
 
+
+
 class CheckConfirmationCodeSerializer(serializers.Serializer):
     username = serializers.CharField(required=True)
     confirmation_code = serializers.CharField(required=True)
@@ -27,4 +29,3 @@ class UserSerializer(serializers.ModelSerializer):
                   'email',
                   'role',)
         model = User
-

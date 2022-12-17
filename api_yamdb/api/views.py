@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from django.contrib.auth.hashers import make_password, check_password
 from django.shortcuts import get_object_or_404
+from django.contrib.auth.hashers import make_password
 
 import random
 
@@ -49,4 +50,5 @@ def get_jwt_token(request):
             return Response({'token': f'{token}'}, status=status.HTTP_200_OK)
         return Response({'confirmation_code': 'Неверный код подтверждения'},
                         status=status.HTTP_400_BAD_REQUEST)
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
