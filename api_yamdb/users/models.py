@@ -13,3 +13,7 @@ class User(AbstractUser):
     access_level = models.CharField(choices=ACCESS_LEVEL,
                                     default='user',
                                     max_length=13)
+    role = models.CharField(choices=ACCESS_LEVEL,
+                                    default='user',
+                                    max_length=13)
+    bio = models.TextField(blank=True, null=True)

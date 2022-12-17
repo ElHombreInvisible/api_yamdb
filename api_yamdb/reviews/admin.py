@@ -1,5 +1,5 @@
 from django.contrib import admin
-
+from django.db.models import Avg
 from .models import Category, Genre, GenresOfTitle, Title
 from .models import Review, Comment
 
@@ -17,11 +17,15 @@ class TitleAdmin(admin.ModelAdmin):
         return genres
 
     def rating(self, name):
-        queryset = Review.objects.filter(title=name)
-        rating=[]
-        for elem in queryset:
-            rating.append(elem.score)
-        return int(sum(rating)/len(rating))
+        # queryset = Review.objects.filter(title=name)
+        # rating=[]
+        # for elem in queryset:
+        #    rating.append(elem.score)
+        # return int(sum(rating)/len(rating))
+        rating = None #  
+        title=Title.objects.get(name=name)
+        rating=title.reviews.aggregate(Avg('score')).get('score__avg')
+        return rating
 
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug')

@@ -24,8 +24,9 @@ class GenreViewSet(mixins.CreateModelMixin,
                     mixins.DestroyModelMixin,
                     viewsets.GenericViewSet):
 
+    serializer_class = GenreSerializer
     queryset = Genre.objects.all()
-    serialzer_class = GenreSerializer
+
 
 
 class TitleViewSet(viewsets.ModelViewSet):
