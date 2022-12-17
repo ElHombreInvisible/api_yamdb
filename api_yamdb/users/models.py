@@ -1,6 +1,8 @@
 # api_yamdb/users/models.py
 from django.db import models
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.models import AbstractUser
+
+# from api.validators import validate_username
 
 
 ROLE = (
@@ -19,7 +21,7 @@ class User(AbstractUser):
         null=False
     )
     email = models.EmailField(
-        # max_length=254,
+        max_length=254,
         unique=True,
         blank=False,
         null=False

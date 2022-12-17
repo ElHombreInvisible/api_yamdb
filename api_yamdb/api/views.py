@@ -24,6 +24,7 @@ def send_confirmation_code(request):
     user = serializer.save()
 
     email = request.data.get('email', False)
+
     username = request.data.get('username', False)
     User.objects.filter(email=email).update(
         confirmation_code=make_password(confirmation_code,

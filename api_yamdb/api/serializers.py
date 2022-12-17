@@ -12,7 +12,21 @@ class SendConfirmationCodeSerializer(serializers.ModelSerializer):
         model = User
         fields = ('email', 'username')
 
+    def validate_email(self, value):
+        if len(value) > 254:
+            raise serializers.ValidationError('Email должен быть не'
+                                              ' более 254 символов')
+        return value
 
+    def validate_username(self, value):
+        if len(value) > 150:
+            raise serializers.ValidationError('Username должен быть не'
+                                              ' более 150 символов')
+        if value == 'me':
+            raise serializers.ValidationError('Использовать имя пользователя'
+                                              '"me" запрещенно')
+
+        return value
 
 
 class CheckConfirmationCodeSerializer(serializers.Serializer):
