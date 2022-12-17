@@ -1,9 +1,8 @@
 # api_yamdb/users/models.py
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-
+import random
 # from api.validators import validate_username
-
 
 ROLE = (
     ('user', 'Пользователь'),
@@ -23,7 +22,7 @@ class User(AbstractUser):
     email = models.EmailField(
         max_length=254,
         unique=True,
-        blank=False,
+        blank=True,
         null=False
     )
     role = models.CharField(
@@ -36,6 +35,7 @@ class User(AbstractUser):
     bio = models.TextField(
         'Биография',
         blank=True,
+        # null=True
     )
     first_name = models.CharField(
         'Имя',
@@ -52,7 +52,7 @@ class User(AbstractUser):
         max_length=255,
         null=True,
         blank=False,
-        default='000000'
+        default=''.join(map(str, random.sample(range(10), 6)))
     )
 
     class Meta:
