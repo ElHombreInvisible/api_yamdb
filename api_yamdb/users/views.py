@@ -1,17 +1,18 @@
+import random
+
+from django.contrib.auth.hashers import check_password, make_password
 from django.core.mail import send_mail
-from rest_framework import status
+from django.db import models
+from django.shortcuts import get_object_or_404
+from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
-from django.contrib.auth.hashers import make_password, check_password
-from django.shortcuts import get_object_or_404
-from django.contrib.auth.hashers import make_password
 
-import random
-
-from users.models import User
-from .serializers import (SendConfirmationCodeSerializer,
-                          CheckConfirmationCodeSerializer)
+from .models import User
+from .permissions import IsAdminUser
+from .serializers import (CheckConfirmationCodeSerializer,
+                          SendConfirmationCodeSerializer, UserSerializer)
 
 
 @api_view(['POST'])
@@ -53,3 +54,9 @@ def get_jwt_token(request):
                         status=status.HTTP_400_BAD_REQUEST)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class UserViewSet(viewsets.ModelViewSet):
+
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = (IsAdminUser,)

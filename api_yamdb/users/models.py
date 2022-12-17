@@ -1,7 +1,9 @@
 # api_yamdb/users/models.py
-from django.db import models
-from django.contrib.auth.models import AbstractUser
 import random
+
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+
 # from api.validators import validate_username
 
 ROLE = (

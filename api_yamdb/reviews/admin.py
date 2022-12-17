@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django.db.models import Avg
-from .models import Category, Genre, GenresOfTitle, Title
-from .models import Review, Comment
+
+from .models import Category, Comment, Genre, GenresOfTitle, Review, Title
+
 
 class TitleAdmin(admin.ModelAdmin):
     list_display = ('pk', 'year', 'name', 'category', 'genres', 'rating')
