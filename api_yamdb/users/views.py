@@ -20,35 +20,48 @@ def send_confirmation_code(request):
     serializer = SendConfirmationCodeSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
+    def check_exists_user(username):
+        return User.objects.filter(username=username).exists()
+
+    # def check_email(user, email):
+    #     if user.email != email:
+    #         return Response(
+    #             {'Неверный email'},
+    #             status=status.HTTP_400_BAD_REQUEST)
+        # return True
+
+    def create_confirmation_code():
+        confirmation_code = ''.join(map(str, random.sample(range(10), 6)))
+        return confirmation_code
+
+    def hash_and_save_confirm_code(confirmation_code, email):
+        User.objects.filter(email=email).update(
+            confirmation_code=make_password(confirmation_code,
+                                            salt=None,
+                                            hasher='default'))
+
+    def send_confirmation(email, mail_subject, message):
+        send_mail(mail_subject, message, 'Yamdb.ru <admin@yamdb.ru>', [email])
+
     username = serializer.validated_data['username']
     email = serializer.validated_data['email']
 
-    user = User.objects.filter(username=username).exists()
-    if user:
+    if check_exists_user(username):
         user = User.objects.get(username=username)
+        # check_email(user, email)
         if user.email != email:
             return Response(
                 {'Неверный email'},
                 status=status.HTTP_400_BAD_REQUEST)
 
-    confirmation_code = ''.join(map(str, random.sample(range(10), 6)))
-
     user = serializer.save()
 
-    email = request.data.get('email', False)
-
-    username = request.data.get('username', False)
-    User.objects.filter(email=email).update(
-        confirmation_code=make_password(confirmation_code,
-                                        salt=None,
-                                        hasher='default')
-    )
-
+    confirmation_code = create_confirmation_code()
+    hash_and_save_confirm_code(confirmation_code, email)
     mail_subject = 'Код подтверждения на Yamdb.ru'
     message = (f'Ваш код подтверждения: {confirmation_code},'
                f' username: {username}')
-    send_mail(mail_subject, message, 'Yamdb.ru <admin@yamdb.ru>', [email])
-
+    send_confirmation(email, mail_subject, message)
 
     return Response(serializer.data, status=status.HTTP_200_OK)
 
