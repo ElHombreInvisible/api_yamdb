@@ -3,7 +3,7 @@ from rest_framework import filters, mixins, permissions, viewsets
 from rest_framework.pagination import PageNumberPagination
 from reviews.models import Category, Genre, Review, Title
 
-from .permissions import AuthorOrReadOnly
+from .permissions import AuthorOrReadOnly, AdminOrReadOnly, IsStaffOrAuthor
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer, TitleSerializer)
 
@@ -16,7 +16,10 @@ class CategoryViewSet(mixins.CreateModelMixin,
 
     queryset=Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (AdminOrReadOnly,)
+    pagination_class = PageNumberPagination
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('^name',)
 
 
 class GenreViewSet(mixins.CreateModelMixin,
@@ -27,19 +30,23 @@ class GenreViewSet(mixins.CreateModelMixin,
 
     serializer_class = GenreSerializer
     queryset = Genre.objects.all()
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (AdminOrReadOnly,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('^name',)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
 
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (AdminOrReadOnly,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('^name', '^category', '^genre')
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = (AuthorOrReadOnly,)
+    permission_classes = (IsStaffOrAuthor,)
     pagination_class = PageNumberPagination
 
     def get_queryset(self):
@@ -54,7 +61,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = (AuthorOrReadOnly,)
+    permission_classes = (IsStaffOrAuthor,)
 
     def get_queryset(self):
         review_id = self.kwargs.get('review_id')

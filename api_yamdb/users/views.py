@@ -4,13 +4,13 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.core.mail import send_mail
 from django.db import models
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, mixins, permissions, status, viewsets
+from rest_framework import filters, mixins, permissions, status,exceptions, viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
 from .models import User
-from .permissions import IsAdminUser
+from .permissions import IsAdminUser, IsOwner
 from .serializers import (CheckConfirmationCodeSerializer,
                           SendConfirmationCodeSerializer, UserSerializer)
 
@@ -59,4 +59,30 @@ class UserViewSet(viewsets.ModelViewSet):
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    lookup_field = 'username'
     permission_classes = (IsAdminUser,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('^username',)
+
+    def perform_update(self, serializer):
+        if self.request.method=='PUT':
+            raise exceptions.MethodNotAllowed('Запрещенный метод')
+        return super().perform_update(serializer)
+
+class AccountViewSet(mixins.RetrieveModelMixin,
+                     mixins.UpdateModelMixin,
+                     mixins.ListModelMixin,
+                     viewsets.GenericViewSet,
+                    ):
+
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+    def get_queryset(self):
+        # queryset = User.objects.get(username=self.request.user)
+        queryset = get_object_or_404(User, username=self.request.user)
+        return queryset
+    
+    def perform_update(self, serializer):
+        if self.request.method=='DELETE':
+            raise exceptions.MethodNotAllowed('Запрещенный метод')
+        return super().perform_update(serializer)

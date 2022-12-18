@@ -10,7 +10,8 @@ class Genre(models.Model):
 
     def __str__(self):
         return self.name
-
+    class Meta:
+        ordering = ['name',]
 
 class Category(models.Model):
     name = models.CharField(max_length=256)
@@ -19,7 +20,8 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
-
+    class Meta:
+        ordering = ['name',]
 
 class Title(models.Model):
     name = models.CharField(max_length=256)
@@ -37,7 +39,8 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
-
+    class Meta:
+        ordering = ['-year',]
 
 class GenresOfTitle(models.Model):
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE) # или Protect?
@@ -64,6 +67,8 @@ class Review(models.Model):
 
     def __str__(self):
         return self.text
+    class Meta:
+        ordering = ['-pub_date',]
 
 class Comment(models.Model):
     author = models.ForeignKey(
@@ -73,3 +78,6 @@ class Comment(models.Model):
     text = models.TextField()
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True)
+
+    class Meta:
+        ordering = ['-pub_date',]
