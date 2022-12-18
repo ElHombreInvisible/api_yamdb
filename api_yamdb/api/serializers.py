@@ -1,50 +1,69 @@
 # api/serializers
-import re
+import datetime as dt
+
 from rest_framework import serializers
+from rest_framework.relations import SlugRelatedField
+from rest_framework.validators import UniqueTogetherValidator
+from reviews.models import Category, Comment, Genre, Review, Title
 
-from users.models import User
 
-
-class SendConfirmationCodeSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(required=True)
-    email = serializers.EmailField(required=True)
+class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = User
-        fields = ('email', 'username')
-
-    def validate_email(self, value):
-        if len(value) > 254:
-            raise serializers.ValidationError('Email должен быть не'
-                                              ' более 254 символов')
-        return value
-
-    def validate_username(self, value):
-        if len(value) > 150:
-            raise serializers.ValidationError('Username должен быть не'
-                                              ' более 150 символов')
-        if value == 'me':
-            raise serializers.ValidationError('Использовать имя пользователя'
-                                              '"me" запрещенно')
-
-        if re.search(r'^[a-zA-Z][a-zA-Z0-9-_\.]{1,20}$', value) is None:
-            raise serializers.ValidationError(('Не допустимые символы '
-                                               'в имени пользователя.'))
-
-        return value
+        model = Category
+        fields = ('name', 'slug')
 
 
-class CheckConfirmationCodeSerializer(serializers.Serializer):
-    username = serializers.CharField(required=True)
-    confirmation_code = serializers.CharField(required=True)
-
-
-class UserSerializer(serializers.ModelSerializer):
+class GenreSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = ('first_name',
-                  'last_name',
-                  'username',
-                  'bio',
-                  'email',
-                  'role',)
-        model = User
+        model = Genre
+        fields = ('name', 'slug')
+
+
+class TitleSerializer(serializers.ModelSerializer):
+    category = CategorySerializer(read_only=True)
+    # category = SlugRelatedField(read_only=True, slug_field='slug')
+    genre = GenreSerializer(many=True, required=False)
+    rating = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Title
+        fields = ('id', 'name', 'year', 'rating',
+                  'description', 'genre', 'category')
+    
+    def get_rating(self, obj):
+        return None
+
+    def validate(self, data):
+        # if self.context['request'].year > dt.datetime.now().year:
+        if data['year'] > dt.datetime.now().year:
+            raise serializers.ValidationError(
+            'Неверная дата выхода или произведение еще не вышло.')
+        return data
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    author = SlugRelatedField(slug_field='username', read_only=True,
+                              default=serializers.CurrentUserDefault())
+
+    class Meta:
+        fields = ('id', 'text', 'author', 'title', 'score', 'pub_date')
+        model = Review
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Review.objects.all(),
+                fields=('author', 'title'),
+                message='Можно оставлять только один отзыв к произведению'
+            )
+        ]
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True, slug_field='username',
+        default=serializers.CurrentUserDefault()
+    )
+
+    class Meta:
+        fields = ('id', 'author', 'review', 'text', 'pub_date')
+        model = Comment
