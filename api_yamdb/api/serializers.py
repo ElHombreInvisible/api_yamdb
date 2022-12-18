@@ -21,7 +21,7 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     # category = SlugRelatedField(read_only=True, slug_field='slug')
-    genre = GenreSerializer(many=True, required=False)
+    genre = GenreSerializer(many=True, required=True)
     rating = serializers.SerializerMethodField()
 
     class Meta:
@@ -32,13 +32,18 @@ class TitleSerializer(serializers.ModelSerializer):
     def get_rating(self, obj):
         return None
 
-    def validate(self, data):
+    def validate_year(self, data):
         # if self.context['request'].year > dt.datetime.now().year:
-        if data['year'] > dt.datetime.now().year:
+        if data > dt.datetime.now().year:
             raise serializers.ValidationError(
             'Неверная дата выхода или произведение еще не вышло.')
         return data
 
+    def validate_name(self, value):
+        if len(value) > 256:
+            raise serializers.ValidationError('name должен быть не'
+                                              ' более 256 символов')
+        return value
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = SlugRelatedField(slug_field='username', read_only=True,
