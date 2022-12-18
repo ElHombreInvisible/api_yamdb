@@ -82,7 +82,7 @@ class UserViewSet(viewsets.ModelViewSet):
             raise exceptions.MethodNotAllowed('Запрещенный метод')
         return super().perform_update(serializer)
 
-class AccountViewSet(mixins.RetrieveModelMixin,
+class AccountViewSet(#mixins.RetrieveModelMixin,
                      mixins.UpdateModelMixin,
                      mixins.ListModelMixin,
                      viewsets.GenericViewSet,
