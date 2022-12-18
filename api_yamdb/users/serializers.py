@@ -4,7 +4,7 @@ from django.db import models
 from rest_framework import serializers
 from rest_framework import exceptions
 from rest_framework.validators import UniqueValidator
-from .models import User
+from users.models import User
 
 
 class SendConfirmationCodeSerializer(serializers.ModelSerializer):
@@ -36,7 +36,6 @@ class SendConfirmationCodeSerializer(serializers.ModelSerializer):
         if re.search(r'^[a-zA-Z][a-zA-Z0-9-_\.]{1,20}$', value) is None:
             raise serializers.ValidationError(('Не допустимые символы '
                                                'в имени пользователя.'))
-
         return value
 
 
@@ -47,7 +46,7 @@ class CheckConfirmationCodeSerializer(serializers.Serializer):
 
 class UserSerializer(serializers.ModelSerializer):
     email = models.EmailField(max_length=254,
-        unique=True)
+                              unique=True)
     class Meta:
         fields = ('username',
                   'email',

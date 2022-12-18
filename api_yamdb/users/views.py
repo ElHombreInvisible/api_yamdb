@@ -20,6 +20,17 @@ def send_confirmation_code(request):
     serializer = SendConfirmationCodeSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
+    username = serializer.validated_data['username']
+    email = serializer.validated_data['email']
+
+    user = User.objects.filter(username=username).exists()
+    if user:
+        user = User.objects.get(username=username)
+        if user.email != email:
+            return Response(
+                {'Неверный email'},
+                status=status.HTTP_400_BAD_REQUEST)
+
     confirmation_code = ''.join(map(str, random.sample(range(10), 6)))
 
     user = serializer.save()
@@ -37,6 +48,8 @@ def send_confirmation_code(request):
     message = (f'Ваш код подтверждения: {confirmation_code},'
                f' username: {username}')
     send_mail(mail_subject, message, 'Yamdb.ru <admin@yamdb.ru>', [email])
+
+
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 

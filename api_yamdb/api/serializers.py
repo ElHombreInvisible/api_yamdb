@@ -1,3 +1,4 @@
+# api/serializers
 import datetime as dt
 
 from rest_framework import serializers
@@ -12,11 +13,12 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = ('name', 'slug')
 
-class GenreSerializer(serializers.ModelSerializer):
 
+class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
         fields = ('name', 'slug')
+
 
 class TitleSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
