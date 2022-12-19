@@ -17,7 +17,7 @@ class SendConfirmationCodeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('email', 'username')
+        fields = ('username', 'email')
 
     def validate_email(self, value):
         if len(value) > 254:

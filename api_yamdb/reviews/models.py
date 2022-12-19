@@ -26,7 +26,7 @@ class Category(models.Model):
 class Title(models.Model):
     name = models.CharField(max_length=256)
     year = models.PositiveIntegerField()
-    description = models.TextField()
+    description = models.TextField(blank=True)
     category = models.ForeignKey(
         Category, on_delete=models.PROTECT,
         related_name='titles',

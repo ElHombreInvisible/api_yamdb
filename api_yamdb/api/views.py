@@ -9,7 +9,7 @@ from .serializers import (CategorySerializer, CommentSerializer,
 
 
 class CategoryViewSet(mixins.CreateModelMixin,
-                    mixins.RetrieveModelMixin,
+                    # mixins.RetrieveModelMixin,
                     mixins.ListModelMixin,
                     mixins.DestroyModelMixin,
                     viewsets.GenericViewSet):
@@ -20,10 +20,10 @@ class CategoryViewSet(mixins.CreateModelMixin,
     pagination_class = PageNumberPagination
     filter_backends = (filters.SearchFilter,)
     search_fields = ('^name',)
-
+    lookup_field='slug'
 
 class GenreViewSet(mixins.CreateModelMixin,
-                    mixins.RetrieveModelMixin,
+                    #mixins.RetrieveModelMixin,
                     mixins.ListModelMixin,
                     mixins.DestroyModelMixin,
                     viewsets.GenericViewSet):
@@ -33,13 +33,14 @@ class GenreViewSet(mixins.CreateModelMixin,
     permission_classes = (AdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('^name',)
+    lookup_field = 'slug'
 
 
 class TitleViewSet(viewsets.ModelViewSet):
 
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    permission_classes = (AdminOrReadOnly,)
+    # permission_classes = (AdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('^name', '^category', '^genre')
 
