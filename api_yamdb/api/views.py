@@ -1,10 +1,10 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, mixins, permissions, viewsets
+from rest_framework import exceptions, filters, mixins, permissions, viewsets
 from rest_framework.pagination import PageNumberPagination
 from reviews.models import Category, Genre, Review, Title
 
 from .permissions import AuthorOrReadOnly, AdminOrReadOnly, IsStaffOrAuthor
-from .serializers import (CategorySerializer, CommentSerializer,
+from .serializers import (CategorySerializer, CommentSerializer, CreateTitleSerializer, CreateReviewSerializer,
                           GenreSerializer, ReviewSerializer, TitleSerializer)
 
 
@@ -40,9 +40,15 @@ class TitleViewSet(viewsets.ModelViewSet):
 
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    # permission_classes = (AdminOrReadOnly,)
+    # serializer_class = CreateTitleSerializer
+    permission_classes = (AdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
-    search_fields = ('^name', '^category', '^genre')
+    search_fields = ('^name', '^category', 'genre__titles') # не работает поиск по genre
+
+    def get_serializer_class(self):
+        if self.action in ('create','partial_update'):
+            return CreateTitleSerializer
+        return TitleSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -53,19 +59,32 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
         title = Title.objects.get(id=title_id)
-        new_queryset = title.reviews
+        new_queryset = title.reviews.all()
         return new_queryset
 
+    def get_serializer_class(self):
+        if self.action in ('create','partial_update'):
+            return CreateReviewSerializer
+        return ReviewSerializer
+
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        if Review.objects.filter(author=self.request.user, title_id=self.kwargs.get('title_id')).exists():
+            raise exceptions.ValidationError('нельзя сделать более одного ревью на произведение')
+        serializer.save(author=self.request.user, title_id=self.kwargs.get('title_id'))
+
 
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = (IsStaffOrAuthor,)
+    pagination_class = PageNumberPagination
 
     def get_queryset(self):
         review_id = self.kwargs.get('review_id')
         review = Review.objects.get(id=review_id)
-        new_queryset = review.comments
+        new_queryset = review.comments.all()
         return new_queryset
+
+    def perform_create(self, serializer):
+        get_object_or_404(Review, pk=self.kwargs.get('review_id'))
+        serializer.save(author=self.request.user, review_id=self.kwargs.get('review_id'))

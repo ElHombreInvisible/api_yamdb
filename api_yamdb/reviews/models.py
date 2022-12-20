@@ -43,8 +43,10 @@ class Title(models.Model):
         ordering = ['-year',]
 
 class GenresOfTitle(models.Model):
-    genre = models.ForeignKey(Genre, on_delete=models.CASCADE) # или Protect?
-    title = models.ForeignKey(Title, on_delete=models.CASCADE)
+    genre = models.ForeignKey(Genre, on_delete=models.CASCADE,
+                              related_name='titles_of_genre') # или Protect?
+    title = models.ForeignKey(Title, on_delete=models.CASCADE,
+                              related_name='title_genres')
 
     def __str__(self):
         return f'{self.title} категория:{self.genre}'
@@ -58,7 +60,7 @@ class Review(models.Model):
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='reviews')
-    score = models.IntegerField(default=1, db_index=True,
+    score = models.IntegerField(db_index=True,blank=False,null=False,
                                 validators=[
                                     MaxValueValidator(10),
                                     MinValueValidator(1)
@@ -69,6 +71,11 @@ class Review(models.Model):
         return self.text
     class Meta:
         ordering = ['-pub_date',]
+
+        constraints = [
+            models.UniqueConstraint(fields=['author', 'title'], name='UniqueReviewCOnstraint')
+        ]    
+
 
 class Comment(models.Model):
     author = models.ForeignKey(

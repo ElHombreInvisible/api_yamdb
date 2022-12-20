@@ -26,6 +26,7 @@ class TitleAdmin(admin.ModelAdmin):
         rating = None #  
         title=Title.objects.get(name=name)
         rating=title.reviews.aggregate(Avg('score')).get('score__avg')
+        print(rating)
         return rating
 
 class CategoryAdmin(admin.ModelAdmin):

@@ -5,13 +5,13 @@ from django.core.mail import send_mail
 from django.db import models
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, mixins, permissions, status,exceptions, viewsets
-from rest_framework.decorators import api_view
+from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
-
+from rest_framework.response import Response
 from .models import User
 from .permissions import IsAdminUser, IsOwner
-from .serializers import (CheckConfirmationCodeSerializer,
+from .serializers import (AccountSerializer, CheckConfirmationCodeSerializer,
                           SendConfirmationCodeSerializer, UserSerializer)
 
 
@@ -90,10 +90,26 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('^username',)
 
-    def perform_update(self, serializer):
-        if self.request.method=='PUT':
+    def get_serializer_class(self):
+        if self.request.user.role =='user' and self.request.method=='PATCH':
+            return AccountSerializer
+        return UserSerializer
+
+    def update(self, request, *args, **kwargs):
+        if request.method=='PUT':
             raise exceptions.MethodNotAllowed('Запрещенный метод')
-        return super().perform_update(serializer)
+        return super().update(request, *args, **kwargs)
+
+    @action(detail=False, methods=['patch', 'get'],
+            permission_classes=(IsOwner,), url_path='me')
+    def me(self, request):
+        user = User.objects.get(username=request.user)
+        serializer = self.get_serializer(user, many=False)
+        return Response(serializer.data)
+
+
+
+
 
 class AccountViewSet(#mixins.RetrieveModelMixin,
                      mixins.UpdateModelMixin,

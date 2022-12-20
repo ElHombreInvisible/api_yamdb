@@ -6,7 +6,7 @@ from .views import UserViewSet, get_jwt_token, send_confirmation_code, AccountVi
 app_name = 'users'
 
 user_router = DefaultRouter()
-user_router.register('users/me', AccountViewSet, basename='users')
+# user_router.register(r'users/me', AccountViewSet, basename='users')
 user_router.register(r'users', UserViewSet)
 
 
