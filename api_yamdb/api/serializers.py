@@ -31,12 +31,10 @@ class TitleSerializer(serializers.ModelSerializer):
                   'description', 'genre', 'category')
 
     def get_rating(self, obj):
-        # rating = None
         rating = obj.reviews.aggregate(Avg('score')).get('score__avg')
         return int(rating) if rating is not None else None
 
     def validate_year(self, data):
-        # if self.context['request'].year > dt.datetime.now().year:
         if data > dt.datetime.now().year:
             raise serializers.ValidationError(
                 'Неверная дата выхода или произведение еще не вышло.')
@@ -61,7 +59,6 @@ class CreateTitleSerializer(serializers.ModelSerializer):
                   'description', 'genre', 'category')
 
     def validate_year(self, data):
-        # if self.context['request'].year > dt.datetime.now().year:
         if data > dt.datetime.now().year:
             raise serializers.ValidationError(
                 'Неверная дата выхода или произведение еще не вышло.')
@@ -83,23 +80,12 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = ('id', 'text', 'author', 'score', 'pub_date', 'title')
         read_only_fields = ('title',)
         model = Review
-        # validators = [
-        #     UniqueTogetherValidator(
-        #         queryset=Review.objects.all(),
-        #         fields=('author', 'title'),
-        #         message='Можно оставлять только один отзыв к произведению'
-        #     )
-        # ]
 
 
 class CreateReviewSerializer(serializers.ModelSerializer):
-    #    author = serializers.SlugRelatedField(
-    #        read_only=True, slug_field='username',
-    #        default=serializers.CurrentUserDefault())
-    #    title = SlugRelatedField(read_only=True, slug_field='title')
+
     class Meta:
         fields = ('id', 'text', 'score',)
-    #        read_only_fields = ('author','title',)
         model = Review
 
     def validate(self, value):
@@ -126,6 +112,5 @@ class CommentSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ('id', 'text', 'author', 'pub_date')  # , 'review'
-        # read_only_fields = ('review',)
+        fields = ('id', 'text', 'author', 'pub_date')
         model = Comment
