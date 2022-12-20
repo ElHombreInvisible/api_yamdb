@@ -2,84 +2,68 @@ import random
 
 from django.contrib.auth.hashers import check_password, make_password
 from django.core.mail import send_mail
-from django.db import models
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, mixins, permissions, status,exceptions, viewsets
+from rest_framework import (exceptions, filters, mixins, permissions, status,
+                            viewsets)
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework.response import Response
+
 from .models import User
 from .permissions import IsAdminUser, IsOwner
 from .serializers import (AccountSerializer, CheckConfirmationCodeSerializer,
                           SendConfirmationCodeSerializer, UserSerializer)
 
 
-@api_view(['POST'])
-def send_confirmation_code(request):
-    serializer = SendConfirmationCodeSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-
-    def check_exists_user(username):
-        return User.objects.filter(username=username).exists()
-
-    # def check_email(user, email):
-    #     if user.email != email:
-    #         return Response(
-    #             {'Неверный email'},
-    #             status=status.HTTP_400_BAD_REQUEST)
-        # return True
-
-    def create_confirmation_code():
-        confirmation_code = ''.join(map(str, random.sample(range(10), 6)))
-        return confirmation_code
-
-    def hash_and_save_confirm_code(confirmation_code, email):
-        User.objects.filter(email=email).update(
-            confirmation_code=make_password(confirmation_code,
-                                            salt=None,
-                                            hasher='default'))
-
-    def send_confirmation(email, mail_subject, message):
-        send_mail(mail_subject, message, 'Yamdb.ru <admin@yamdb.ru>', [email])
-
-    username = serializer.validated_data['username']
-    email = serializer.validated_data['email']
-
-    if check_exists_user(username):
-        user = User.objects.get(username=username)
-        # check_email(user, email)
-        if user.email != email:
-            return Response(
-                {'Неверный email'},
-                status=status.HTTP_400_BAD_REQUEST)
-
-    user = serializer.save()
-
-    confirmation_code = create_confirmation_code()
-    hash_and_save_confirm_code(confirmation_code, email)
+def create_and_send_confirmation(username, email):
+    confirmation_code = ''.join(map(str, random.sample(range(10), 6)))
+    User.objects.filter(email=email).update(
+        confirmation_code=make_password(confirmation_code,
+                                        salt=None,
+                                        hasher='default'))
     mail_subject = 'Код подтверждения на Yamdb.ru'
     message = (f'Ваш код подтверждения: {confirmation_code},'
                f' username: {username}')
-    send_confirmation(email, mail_subject, message)
+    send_mail(mail_subject, message, 'Yamdb.ru <admin@yamdb.ru>', [email])
 
+
+@api_view(['POST'])
+def send_confirmation_code(request):
+    username = request.data.get('username')
+    email = request.data.get('email')
+
+    if User.objects.filter(username=username).exists():
+        user = User.objects.get(username=username)
+        if user.email != email:
+            return Response(
+                {'Пользователь с таким именем уже существует'},
+                status=status.HTTP_400_BAD_REQUEST)
+        create_and_send_confirmation(username, email)
+        serializer = SendConfirmationCodeSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    serializer = SendConfirmationCodeSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    username = serializer.validated_data['username']
+    email = serializer.validated_data['email']
+    user = serializer.save()
+    create_and_send_confirmation(username, email)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
 def get_jwt_token(request):
     serializer = CheckConfirmationCodeSerializer(data=request.data)
-    if serializer.is_valid():
-        username = serializer.data.get('username')
-        confirmation_code = serializer.data.get('confirmation_code')
-        user = get_object_or_404(User, username=username)
-        if check_password(confirmation_code, user.confirmation_code):
-            token = AccessToken.for_user(user)
-            return Response({'token': f'{token}'}, status=status.HTTP_200_OK)
-        return Response({'confirmation_code': 'Неверный код подтверждения'},
-                        status=status.HTTP_400_BAD_REQUEST)
+    serializer.is_valid(raise_exception=True)
+    username = serializer.data.get('username')
+    confirmation_code = serializer.data.get('confirmation_code')
+    user = get_object_or_404(User, username=username)
+    if check_password(confirmation_code, user.confirmation_code):
+        token = AccessToken.for_user(user)
+        return Response({'token': f'{token}'}, status=status.HTTP_200_OK)
+    return Response({'confirmation_code': 'Неверный код подтверждения'},
+                    status=status.HTTP_400_BAD_REQUEST)
 
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class UserViewSet(viewsets.ModelViewSet):
 
@@ -91,31 +75,37 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ('^username',)
 
     def get_serializer_class(self):
-        if self.request.user.role =='user' and self.request.method=='PATCH':
+        if self.request.user.role == 'user' and self.request.method == 'PATCH':
             return AccountSerializer
         return UserSerializer
 
     def update(self, request, *args, **kwargs):
-        if request.method=='PUT':
+        if request.method == 'PUT':
             raise exceptions.MethodNotAllowed('Запрещенный метод')
         return super().update(request, *args, **kwargs)
+
+    def perform_update(self, serializer):
+        if self.request.method == 'PUT':
+            raise exceptions.MethodNotAllowed('Запрещенный метод')
+        return super().perform_update(serializer)
 
     @action(detail=False, methods=['patch', 'get'],
             permission_classes=(IsOwner,), url_path='me')
     def me(self, request):
-        user = User.objects.get(username=request.user)
-        serializer = self.get_serializer(user, many=False)
+        if request.method == 'PATCH':
+            serializer = AccountSerializer(request.user,
+                                           data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+        serializer = self.get_serializer(request.user, many=False)
         return Response(serializer.data)
 
 
-
-
-
-class AccountViewSet(#mixins.RetrieveModelMixin,
-                     mixins.UpdateModelMixin,
+class AccountViewSet(mixins.UpdateModelMixin,
                      mixins.ListModelMixin,
                      viewsets.GenericViewSet,
-                    ):
+                     ):
 
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
@@ -123,8 +113,8 @@ class AccountViewSet(#mixins.RetrieveModelMixin,
         # queryset = User.objects.get(username=self.request.user)
         queryset = get_object_or_404(User, username=self.request.user)
         return queryset
-    
+
     def perform_update(self, serializer):
-        if self.request.method=='DELETE':
+        if self.request.method == 'DELETE':
             raise exceptions.MethodNotAllowed('Запрещенный метод')
         return super().perform_update(serializer)

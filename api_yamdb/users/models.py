@@ -15,7 +15,6 @@ ROLE = (
 
 class User(AbstractUser):
     username = models.CharField(
-        # validators=(validate_username,),
         max_length=150,
         unique=True,
         blank=False,
@@ -24,7 +23,6 @@ class User(AbstractUser):
     email = models.EmailField(
         max_length=254,
         unique=True,
-        #blank=True,
         null=False
     )
     role = models.CharField(
@@ -37,7 +35,6 @@ class User(AbstractUser):
     bio = models.TextField(
         'Биография',
         blank=True,
-        # null=True
     )
     first_name = models.CharField(
         'Имя',
@@ -61,6 +58,6 @@ class User(AbstractUser):
         ordering = ('id',)
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
-    
+
     def __str__(self) -> str:
         return self.username

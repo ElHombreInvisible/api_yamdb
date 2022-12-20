@@ -18,16 +18,11 @@ class TitleAdmin(admin.ModelAdmin):
         return genres
 
     def rating(self, name):
-        # queryset = Review.objects.filter(title=name)
-        # rating=[]
-        # for elem in queryset:
-        #    rating.append(elem.score)
-        # return int(sum(rating)/len(rating))
-        rating = None #  
-        title=Title.objects.get(name=name)
-        rating=title.reviews.aggregate(Avg('score')).get('score__avg')
-        print(rating)
+        rating = None
+        title = Title.objects.get(name=name)
+        rating = title.reviews.aggregate(Avg('score')).get('score__avg')
         return rating
+
 
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug')
@@ -44,6 +39,7 @@ class ReviewAdmin(admin.ModelAdmin):
 class CommentAdmin(admin.ModelAdmin):
     list_display = ('author', 'text', 'review', 'pub_date')
     list_filter = ('pub_date',)
+
 
 admin.site.register(Title, TitleAdmin)
 admin.site.register(Category, CategoryAdmin)
