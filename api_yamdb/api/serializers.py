@@ -1,10 +1,8 @@
-import datetime as dt
-
-from django.db.models import Avg
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from reviews.models import Category, Comment, Genre, Review, Title
+
+from .validators import validate_year
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -31,20 +29,10 @@ class TitleSerializer(serializers.ModelSerializer):
                   'description', 'genre', 'category')
 
     def get_rating(self, obj):
-        rating = obj.reviews.aggregate(Avg('score')).get('score__avg')
-        return int(rating) if rating is not None else None
+        return int(obj.rating) if obj.rating is not None else None
 
     def validate_year(self, data):
-        if data > dt.datetime.now().year:
-            raise serializers.ValidationError(
-                'Неверная дата выхода или произведение еще не вышло.')
-        return data
-
-    def validate_name(self, value):
-        if len(value) > 256:
-            raise serializers.ValidationError('name должен быть не'
-                                              ' более 256 символов')
-        return value
+        return validate_year(data)
 
 
 class CreateTitleSerializer(serializers.ModelSerializer):
@@ -59,16 +47,7 @@ class CreateTitleSerializer(serializers.ModelSerializer):
                   'description', 'genre', 'category')
 
     def validate_year(self, data):
-        if data > dt.datetime.now().year:
-            raise serializers.ValidationError(
-                'Неверная дата выхода или произведение еще не вышло.')
-        return data
-
-    def validate_name(self, value):
-        if len(value) > 256:
-            raise serializers.ValidationError('name должен быть не'
-                                              ' более 256 символов')
-        return value
+        return validate_year(data)
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -92,16 +71,11 @@ class CreateReviewSerializer(serializers.ModelSerializer):
         author = self.context['request'].user
         title_id = (self.context['request'].
                     parser_context['kwargs'].get('title_id'))
-        title = get_object_or_404(
-            Title,
-            id=title_id
-        )
         if (self.context['request'].method == 'POST'
-                and title.reviews.filter(author=author).exists()):
-            raise serializers.ValidationError(f'Вы уже оставляли отзыв '
-                                              f'к данному '
-                                              f'произведению - {title.name}. '
-                                              f'с id {title.id}')
+           and Review.objects.filter(author=author, title=title_id).exists()):
+            raise serializers.ValidationError('Вы уже оставляли отзыв '
+                                              'к данному '
+                                              'произведению.')
         return value
 
 

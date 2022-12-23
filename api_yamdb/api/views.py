@@ -1,6 +1,7 @@
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import exceptions, filters, mixins, viewsets
+from rest_framework import filters, mixins, viewsets
 from rest_framework.pagination import PageNumberPagination
 from reviews.models import Category, Genre, Review, Title
 
@@ -39,8 +40,8 @@ class GenreViewSet(mixins.CreateModelMixin,
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-
-    queryset = Title.objects.all()
+    queryset = (Title.objects.annotate(
+                rating=Avg('reviews__score')).order_by('id'))
     serializer_class = TitleSerializer
     permission_classes = (AdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
@@ -59,7 +60,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         title_id = self.kwargs.get('title_id')
-        title = Title.objects.get(id=title_id)
+        title = get_object_or_404(Title, id=title_id)
         new_queryset = title.reviews.all()
         return new_queryset
 
@@ -70,11 +71,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         title_id = self.kwargs.get('title_id')
-        title = Title.objects.get(id=title_id)
-        if Review.objects.filter(author=self.request.user,
-                                 title=title).exists():
-            raise exceptions.ValidationError('нельзя сделать более одного'
-                                             + ' ревью на произведение')
+        title = get_object_or_404(Title, id=title_id)
         serializer.save(author=self.request.user,
                         title=title)
 
@@ -85,8 +82,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     pagination_class = PageNumberPagination
 
     def get_queryset(self):
-        review_id = self.kwargs.get('review_id')
-        review = Review.objects.get(id=review_id)
+        review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
         new_queryset = review.comments.all()
         return new_queryset
 

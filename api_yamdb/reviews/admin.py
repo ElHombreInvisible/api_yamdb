@@ -1,21 +1,14 @@
 from django.contrib import admin
 from django.db.models import Avg
 
-from .models import Category, Comment, Genre, GenresOfTitle, Review, Title
+from .models import Category, Comment, Genre, Review, Title
 
 
 class TitleAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'year', 'name', 'category', 'genres', 'rating')
+    list_display = ('pk', 'year', 'name', 'category', 'rating')
     search_fields = ('name',)
     list_filter = ('year', 'category',)
     empty_value_display = '-пусто-'
-
-    def genres(self, name):
-        queryset = GenresOfTitle.objects.filter(title=name)
-        genres = []
-        for elem in queryset:
-            genres.append(elem.genre)
-        return genres
 
     def rating(self, name):
         rating = None
@@ -44,6 +37,5 @@ class CommentAdmin(admin.ModelAdmin):
 admin.site.register(Title, TitleAdmin)
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Genre, GenreAdmin)
-admin.site.register(GenresOfTitle)
 admin.site.register(Review, ReviewAdmin)
 admin.site.register(Comment, CommentAdmin)
