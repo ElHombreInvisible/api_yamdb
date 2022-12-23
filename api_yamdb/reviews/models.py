@@ -37,25 +37,13 @@ class Title(models.Model):
         blank=True, null=True)
     genre = models.ManyToManyField(
         Genre,
-        related_name='titles',
-        through='GenresOfTitle')
+        related_name='titles')
 
     def __str__(self):
         return self.name
 
     class Meta:
-        ordering = ['-year', ]
-
-
-class GenresOfTitle(models.Model):
-
-    genre = models.ForeignKey(Genre, on_delete=models.CASCADE,
-                              related_name='titles_of_genre')
-    title = models.ForeignKey(Title, on_delete=models.CASCADE,
-                              related_name='title_genres')
-
-    def __str__(self):
-        return f'{self.title} категория:{self.genre}'
+        ordering = ['-year', 'name']
 
 
 class Review(models.Model):
@@ -77,11 +65,11 @@ class Review(models.Model):
         return self.text
 
     class Meta:
-        ordering = ['-pub_date', ]
+        ordering = ['title', ]
 
         constraints = [
             models.UniqueConstraint(fields=['author', 'title'],
-                                    name='UniqueReviewCOnstraint')
+                                    name='UniqueReviewConstraint')
         ]
 
 

@@ -29,8 +29,6 @@ INSTALLED_APPS = [
     'django_filters',
 ]
 
-# AUTH_USER_MODEL = 'users.User'
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -130,3 +128,4 @@ AUTH_USER_MODEL = 'users.User'
 
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
+DEFAULT_SERIVCE_EMAIL = 'Yamdb.ru <admin@yamdb.ru>'

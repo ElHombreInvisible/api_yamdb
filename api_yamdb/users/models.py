@@ -1,10 +1,7 @@
-# api_yamdb/users/models.py
 import random
 
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-
-# from api.validators import validate_username
 
 ROLE = (
     ('user', 'Пользователь'),
